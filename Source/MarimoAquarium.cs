@@ -8,6 +8,8 @@ using UnityEngine;
 
 namespace Editor.Marimo {
     public class Game {
+        private const double autoSaveInterval = 120.0;
+
         private SaveData saveData_ = null;
         
         private Aquarium aquarium_ = new Aquarium();
@@ -36,6 +38,7 @@ namespace Editor.Marimo {
 
         private string saveFilePath_ = "";
         private long latestTicks_ = 0;
+        private double autoSaveTimer_ = 0;
 
         /// <summary>
         /// ゲームの初期化
@@ -59,6 +62,13 @@ namespace Editor.Marimo {
 
             aquarium_.Update(deltaTime);
             actor_.Update(deltaTime);
+
+            // オートセーブ
+            autoSaveTimer_ += deltaTime;
+            if (autoSaveTimer_ >= autoSaveInterval) {
+                DataSave();
+                autoSaveTimer_ = 0;
+            }
         }
 
         /// <summary>
@@ -420,6 +430,10 @@ namespace Editor.Marimo {
         private static void Create() {
             var window = GetWindow<MarimoAquarium>("Marimo");
             window.Init();
+        }
+
+        private void OnEnable() {
+            Init();
         }
 
         /// <summary>
