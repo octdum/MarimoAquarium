@@ -20,7 +20,7 @@ namespace Editor.Marimo {
             set {
                 if (actor_.name != value) {
                     actor_.name = value;
-                    bookingSave_ = true;
+                    BookingSave();
                 }
             }
         }
@@ -88,7 +88,7 @@ namespace Editor.Marimo {
         /// </summary>
         public void CleanWater() {
             if (aquarium_.TryCleanWater()) {
-                bookingSave_ = true;
+                BookingSave();
             }
         }
 
@@ -97,7 +97,7 @@ namespace Editor.Marimo {
         /// </summary>
         public void UpgradeAquarium() {
             if (aquarium_.TryUpgradeAquarium(actor_.sizeBase)) {
-                bookingSave_ = true;
+                BookingSave();
                 actor_.StartUpgradeAnimation();
             }
         }
@@ -163,6 +163,14 @@ namespace Editor.Marimo {
                 actor_.Glow(beforeWater / 2, aquarium_.waterTimeLimit);
                 aquarium_.DirtyWater(deltaTime);
             }
+        }
+
+        /// <summary>
+        /// セーブ予約する
+        /// </summary>
+        private void BookingSave() {
+            bookingSave_ = true;
+            saveWaitTime_ = 0;
         }
 
         /// <summary>
