@@ -8,14 +8,22 @@ using UnityEngine;
 
 namespace Editor.Marimo {
     public class Game {
-        private const double autoSaveInterval = 120.0;
+        private const double SaveWaitTimeLength = 1.0;
 
         private SaveData saveData_ = null;
         
         private Aquarium aquarium_ = new Aquarium();
         private Actor actor_ = new Actor();
 
-        public string actorName { get => actor_.name; set => actor_.name = value; }
+        public string actorName { 
+            get => actor_.name;
+            set {
+                if (actor_.name != value) {
+                    actor_.name = value;
+                    bookingSave_ = true;
+                }
+            }
+        }
         public string actorSize => GameUtil.SizeBaseString(actor_.sizeBase);
         public string water => GameUtil.PercentString(aquarium_.water);
         public string elapsedTime => GameUtil.TickString(latestTicks_ - saveData_.startTicks);
@@ -38,7 +46,8 @@ namespace Editor.Marimo {
 
         private string saveFilePath_ = "";
         private long latestTicks_ = 0;
-        private double autoSaveTimer_ = 0;
+        private double saveWaitTime_ = 0;
+        private bool bookingSave_ = false;
 
         /// <summary>
         /// ゲームの初期化
@@ -63,11 +72,14 @@ namespace Editor.Marimo {
             aquarium_.Update(deltaTime);
             actor_.Update(deltaTime);
 
-            // オートセーブ
-            autoSaveTimer_ += deltaTime;
-            if (autoSaveTimer_ >= autoSaveInterval) {
-                DataSave();
-                autoSaveTimer_ = 0;
+            
+            if (bookingSave_) {
+                saveWaitTime_ += deltaTime;
+                if (saveWaitTime_ >= SaveWaitTimeLength) {
+                    DataSave();
+                    saveWaitTime_ = 0;
+                    bookingSave_ = false;
+                }
             }
         }
 
@@ -75,7 +87,9 @@ namespace Editor.Marimo {
         /// 水をきれいにする
         /// </summary>
         public void CleanWater() {
-            aquarium_.TryCleanWater();
+            if (aquarium_.TryCleanWater()) {
+                bookingSave_ = true;
+            }
         }
 
         /// <summary>
@@ -83,6 +97,7 @@ namespace Editor.Marimo {
         /// </summary>
         public void UpgradeAquarium() {
             if (aquarium_.TryUpgradeAquarium(actor_.sizeBase)) {
+                bookingSave_ = true;
                 actor_.StartUpgradeAnimation();
             }
         }
